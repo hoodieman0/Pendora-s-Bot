@@ -63,7 +63,7 @@ if __name__ == '__main__':
         print(user.data)
 
         # Get The Tweet's URL
-        tweetURL = "https://twitter.com/" + user.data["username"] + "/status/" + str(tweet.id)
+        tweetURL = "https://twitter.com/" + user.data["username"] + "/status/" + str(tweet.id) + " @everyone"
 
         # Create Embed For Discord To Use
         embedVar = discord.Embed(title="", description=tweet.text, color=0x95C8D8)

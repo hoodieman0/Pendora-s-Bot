@@ -19,15 +19,18 @@ Now before you judge my code, consider the following:
 * discord.py is event driven to my knowledge, meaning that in order for any code to be executed an event has to occur.
   * This means I can't just have the discord client fire off tweets by calling a function,
           the two APIs have to be coupled in on_ready.
-* I like using classes, but the coupled nature of the code forces me to not use discord.py's classes.
+* I like using classes, but the circular dependency of the code forces me to not use discord.py's classes.
 * The tweepy overload functions reference things that happen after it because it can't have the function output(tweet)
     before it.
   * output(tweet) must be its own function to properly interact with the discord channels.
-  * output(tweet) must be after the client object is called in order to gain access to client's functions.
+  * output(tweet) must be after the Twitter client object is called in order to gain access to client's functions.
 
 * I hate using global variables because of my upbringing, but it is easier to edit users at the top instead of
   somewhere I can't see it.
 
 Summary: Combining two APIs is really hard.
 
-There may be a better way to do this, but I would need to dedicate more time to this project
+Future Improvements:
+* Proper error checking
+* Handle retweets, images, and videos
+* remove @everyone in output()
