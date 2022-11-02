@@ -14,7 +14,7 @@ import discord
 import os
 from dotenv import load_dotenv
 
-users = ['EliraPendora', '3W1W4', 'jamok0']
+users = ['EliraPendora', '3W1W4']
 
 # Twitter Streaming Class
 # Takes In The Twitter Bearer Token (str), Returns Stream Connection To Twitter
@@ -27,7 +27,9 @@ class TweetStream(asynchronous.AsyncStreamingClient):
     # Everytime A Tweet Is Posted And Is In The Stream Rules, Call This
     async def on_tweet(self, tweet):
         print(tweet.author_id, "---", tweet.text)
+        print(tweet.data)
         await output(tweet)
+
 
 if __name__ == '__main__':
     load_dotenv()   # Get .env File For Hidden Variables
@@ -37,7 +39,6 @@ if __name__ == '__main__':
     discordChannel = int(os.getenv("DISCORD_CHANNEL")) # Discord Channel ID
 
     discordClient = discord.Client(intents=discord.Intents().default())    # Create Discord Client Object
-
     twitterClient = tweepy.Client(twitterBearer) # Create Twitter Client Object
 
 
@@ -57,16 +58,25 @@ if __name__ == '__main__':
         channel = discordClient.get_channel(discordChannel)
 
         # Get User Info
-        user = twitterClient.get_user(id=tweet.author_id, user_fields=["profile_image_url"])
+        user = twitterClient.get_user(id=tweet.author_id, user_fields=["name", "profile_image_url"])
+        print("User Data:")
+        print(user.data)
 
         # Get The Tweet's URL
         tweetURL = "https://twitter.com/" + user.data["username"] + "/status/" + str(tweet.id)
 
         # Create Embed For Discord To Use
-        embedVar = discord.Embed(title=user.data["username"], description=tweet.text, color=0x95C8D8)
-        embedVar.add_field(name="Link", value=tweetURL, inline=False)
-        embedVar.set_thumbnail(url=user.data["profile_image_url"])
-        embedVar.set_footer(text="Twitter")
+        embedVar = discord.Embed(title="", description=tweet.text, color=0x95C8D8)
+        embedVar.set_author(name=user.data["name"] + " | @" + user.data["username"], icon_url=user.data["profile_image_url"])
+
+        time = tweet.created_at.now()
+        formatTime = str(time.day) + "/" + str(time.month) + "/" + str(time.year) + " at " + str(time.hour) + ":" + str(time.minute)
+        embedVar.set_footer(text="Twitter • " + formatTime)
+
+
+        # embedVar.set_thumbnail(url=user.data["profile_image_url"]) •
+        # embedVar.add_field(name="Link", value=tweetURL, inline=False)
+        #TODO set_author
 
         await channel.send(content=tweetURL, embed=embedVar)
 
@@ -75,7 +85,7 @@ if __name__ == '__main__':
     @discordClient.event
     async def on_ready():
         server = discord.utils.get(discordClient.guilds, name=discordServer)   # Get The Current Server ID
-        print(discordClient.user, ' Is Ready! ', server.id)        # Print To Console The Text Channel The Bot Will Use
+        print(discordClient.user, ' Is Ready! ', server.id)      # Print To Console The Text Channel The Bot Will Use
 
         await awake()    # Let The Server Know The Bot Is Up
 
@@ -86,7 +96,7 @@ if __name__ == '__main__':
             rule = "from:" + user       # Specific Twitter API Syntax (See Twitter Documentation)
             await stream.add_rules(tweepy.StreamRule(rule))
         print(await stream.get_rules())
-        stream.filter()         # This Is The Actual Run Of The Stream
+        stream.filter(tweet_fields=["author_id", "created_at"])         # This Is The Actual Run Of The Stream, Adds "author_id" To Tweets
 
 
 
