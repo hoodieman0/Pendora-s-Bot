@@ -7,8 +7,12 @@
 
 Purpose: A Discord bot to keep up with all the latest tweets from @EliraPendora and @3W1W4. Perfect for those who don't check Twitter regularly.
 
-<!-- If you want to make it in C++, try using Discord++ (DiscordPP) and twitcurl (swatkat). Or don't, I didn't look too deep into these APIs-->
+Elira Pendora's Socials:
+* [Youtube](https://www.youtube.com/channel/UCIeSUTOTkF9Hs7q3SGcO-Ow)
+* [@EliraPendora](https://twitter.com/EliraPendora)
+* [@3W1W4](https://twitter.com/3W1W4)
 
+<!-- If you want to make it in C++, try using Discord++ (DiscordPP) and twitcurl (swatkat). Or don't, I didn't look too deep into these APIs-->
 Using discord.py and tweepy
 
 ---
@@ -33,4 +37,3 @@ Summary: Combining two APIs is really hard.
 Future Improvements:
 * Proper error checking
 * Handle retweets, images, and videos
-* remove @everyone in output()
