@@ -23,6 +23,24 @@ class TweetStream(asynchronous.AsyncStreamingClient):
     # First Message Displayed When Twitter Stream Connects Successfully
     async def on_connect(self): print("~Connected~")
 
+    # Error Handling
+    async def on_errors(self, errors):
+        print("on_error")
+        print(errors)
+
+    async def on_connection_error(self):
+        print("on_connection_error")
+
+    async def on_exception(self, exception):
+        print("on_exception")
+        print(exception)
+
+    async def on_request_error(self, status_code):
+        print("on_request_error")
+        print(status_code)
+
+    # Confirmation The Twitter Stream Is Disconnected
+    async def on_disconnect(self): print("~Disconnected~")
 
     # Everytime A Tweet Is Posted And Is In The Stream Rules, Call This
     async def on_tweet(self, tweet):
@@ -62,8 +80,8 @@ if __name__ == '__main__':
         print("User Data:")
         print(user.data)
 
-        # Get The Tweet's URL
-        tweetURL = "https://twitter.com/" + user.data["username"] + "/status/" + str(tweet.id) + " @everyone"
+        # Get The Tweet's URL And Ping Weewas Tag
+        tweetURL = "https://twitter.com/" + user.data["username"] + "/status/" + str(tweet.id) + " @Weewas"
 
         # Create Embed For Discord To Use
         embedVar = discord.Embed(title="", description=tweet.text, color=0x95C8D8)
@@ -76,7 +94,6 @@ if __name__ == '__main__':
 
         # embedVar.set_thumbnail(url=user.data["profile_image_url"]) •
         # embedVar.add_field(name="Link", value=tweetURL, inline=False)
-        #TODO set_author
 
         await channel.send(content=tweetURL, embed=embedVar)
 
