@@ -36,4 +36,4 @@ Summary: Combining two APIs is really hard.
 
 Future Improvements:
 * Proper error checking
-* Handle retweets, images, and videos
+* Handle videos

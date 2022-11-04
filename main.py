@@ -43,10 +43,13 @@ class TweetStream(asynchronous.AsyncStreamingClient):
     async def on_disconnect(self): print("~Disconnected~")
 
     # Everytime A Tweet Is Posted And Is In The Stream Rules, Call This
-    async def on_tweet(self, tweet):
+    async def on_includes(self, includes):
+        if 'media' in includes.keys(): text = includes['media'][0]['url']
+        else: text = None
+        tweet = includes['tweets'][0]
+
         print(tweet.author_id, "---", tweet.text)
-        print(tweet.data)
-        await output(tweet)
+        await output(tweet, text)
 
 
 if __name__ == '__main__':
@@ -72,28 +75,27 @@ if __name__ == '__main__':
 
 
     # Send The Given Tweet To The Specified Channel
-    async def output(tweet):
+    async def output(tweet, media):
         channel = discordClient.get_channel(discordChannel)
 
         # Get User Info
         user = twitterClient.get_user(id=tweet.author_id, user_fields=["name", "profile_image_url"])
-        print("User Data:")
-        print(user.data)
 
         # Get The Tweet's URL And Ping Weewas Tag
         tweetURL = "https://twitter.com/" + user.data["username"] + "/status/" + str(tweet.id) + " @Weewas"
 
         # Create Embed For Discord To Use
         embedVar = discord.Embed(title="", description=tweet.text, color=0x95C8D8)
-        embedVar.set_author(name=user.data["name"] + " | @" + user.data["username"], icon_url=user.data["profile_image_url"])
+        embedVar.set_author(name=user.data["name"] + " | @" + user.data["username"],
+                            icon_url=user.data["profile_image_url"])
+
+        # If There Is An Image, Add It To The Embed
+        if media: embedVar.set_image(url=media)
 
         time = tweet.created_at.now()
-        formatTime = str(time.day) + "/" + str(time.month) + "/" + str(time.year) + " at " + str(time.hour) + ":" + str(time.minute)
+        formatTime = str(time.day) + "/" + str(time.month) + "/" + str(time.year) + " at " + str(time.hour) + ":" + str(
+            time.minute)
         embedVar.set_footer(text="Twitter • " + formatTime)
-
-
-        # embedVar.set_thumbnail(url=user.data["profile_image_url"]) •
-        # embedVar.add_field(name="Link", value=tweetURL, inline=False)
 
         await channel.send(content=tweetURL, embed=embedVar)
 
@@ -113,7 +115,12 @@ if __name__ == '__main__':
             rule = "from:" + user       # Specific Twitter API Syntax (See Twitter Documentation)
             await stream.add_rules(tweepy.StreamRule(rule))
         print(await stream.get_rules())
-        stream.filter(tweet_fields=["author_id", "created_at"])         # This Is The Actual Run Of The Stream, Adds "author_id" To Tweets
+        # This Is The Actual Run Of The Stream
+        stream.filter(expansions=["attachments.media_keys", "referenced_tweets.id"], # Allows For Images/Videos, Retweets, Replies
+                      media_fields=["media_key", "type", "preview_image_url", "url"], # URL To The Media In The Tweet
+                      tweet_fields=["author_id", "created_at"] # Adds The Author ID And Date Created To Tweet Objects
+                      )
+
 
 
 
