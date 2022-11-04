@@ -76,13 +76,15 @@ if __name__ == '__main__':
 
     # Send The Given Tweet To The Specified Channel
     async def output(tweet, media):
-        channel = discordClient.get_channel(discordChannel)
+        channel = discordClient.get_channel(discordChannel) # Get The Channel To Send To
+        server = discord.utils.get(discordClient.guilds, name=discordServer) # Get The Server ID
+        role = discord.utils.get(server.roles, name='Weewas') # Get The Role To Mention
 
         # Get User Info
         user = twitterClient.get_user(id=tweet.author_id, user_fields=["name", "profile_image_url"])
 
         # Get The Tweet's URL And Ping Weewas Tag
-        tweetURL = "https://twitter.com/" + user.data["username"] + "/status/" + str(tweet.id) + " @Weewas"
+        tweetURL = "https://twitter.com/" + user.data["username"] + "/status/" + str(tweet.id)
 
         # Create Embed For Discord To Use
         embedVar = discord.Embed(title="", description=tweet.text, color=0x95C8D8)
@@ -92,12 +94,14 @@ if __name__ == '__main__':
         # If There Is An Image, Add It To The Embed
         if media: embedVar.set_image(url=media)
 
+        # Get The Time The Tweet Was Posted
         time = tweet.created_at.now()
         formatTime = str(time.day) + "/" + str(time.month) + "/" + str(time.year) + " at " + str(time.hour) + ":" + str(
             time.minute)
         embedVar.set_footer(text="Twitter • " + formatTime)
 
-        await channel.send(content=tweetURL, embed=embedVar)
+        # Ping Weewas And Send The Embed To The Channel
+        await channel.send(content=role.mention + " " + tweetURL, embed=embedVar)
 
 
     # When The Discord Bot Starts, Create A Twitter Stream (Which Handles The Posting)

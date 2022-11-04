@@ -37,3 +37,5 @@ Summary: Combining two APIs is really hard.
 Future Improvements:
 * Proper error checking
 * Handle videos
+* Handle retweets and replies
+* Change timezone
