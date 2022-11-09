@@ -1,4 +1,5 @@
 # Written By James Mok on 5 October 2022
+# Lastest Edit By James Mok on 9 November 2022
 
 # Get tweets from @EliraPendora id=1390620618001838086 and @3W1W4 id=1507066475638673422 and send them through discord
 
@@ -21,7 +22,7 @@ users = ['EliraPendora', '3W1W4']
 # Overloads Base AsyncStreamingClient Class
 class TweetStream(asynchronous.AsyncStreamingClient):
     # First Message Displayed When Twitter Stream Connects Successfully
-    async def on_connect(self): print("~Connected~")
+    async def on_connect(self): print("~Twitter Stream Connected~")
 
     # Error Handling
     async def on_errors(self, errors):
@@ -40,16 +41,16 @@ class TweetStream(asynchronous.AsyncStreamingClient):
         print(status_code)
 
     # Confirmation The Twitter Stream Is Disconnected
-    async def on_disconnect(self): print("~Disconnected~")
+    async def on_disconnect(self): print("~Twitter Stream Disconnected~")
 
     # Everytime A Tweet Is Posted And Is In The Stream Rules, Call This
     async def on_includes(self, includes):
-        if 'media' in includes.keys(): text = includes['media'][0]['url']
-        else: text = None
+        if 'media' in includes.keys(): media = includes['media'][0]['url']
+        else: media = None
         tweet = includes['tweets'][0]
 
         print(tweet.author_id, "---", tweet.text)
-        await output(tweet, text)
+        await output(tweet, media)
 
 
 if __name__ == '__main__':
@@ -58,14 +59,23 @@ if __name__ == '__main__':
     discordToken = os.getenv("DISCORD_TOKEN")
     discordServer = os.getenv("DISCORD_SERVER") # Discord Server Name
     discordChannel = int(os.getenv("DISCORD_CHANNEL")) # Discord Channel ID
+    discordRole = os.getenv("DISCORD_ROLE") # Discord Server Role String
 
     discordClient = discord.Client(intents=discord.Intents().default())    # Create Discord Client Object
     twitterClient = tweepy.Client(twitterBearer) # Create Twitter Client Object
 
+    stream = TweetStream(bearer_token=twitterBearer)  # Create The Twitter Stream
+
+    # Follow The Desired Twitter Users
+    for user in users:
+        rule = "from:" + user  # Specific Twitter API Syntax (See Twitter Documentation)
+        stream.add_rules(tweepy.StreamRule(rule))
+    print(stream.get_rules())
+
 
     # Post "SHEEEEESH" In The Specified Channel
     async def awake():
-        channel = discordClient.get_channel(discordChannel)
+        channel = discordClient.get_channel(discordChannel)  # Get The Channel To Send Embeds to
 
         # Create Embed For Discord To Use
         embedVar = discord.Embed(title="SHEEEEESH", description="You have opened Pendora's Bot", color=0x95C8D8)
@@ -76,9 +86,11 @@ if __name__ == '__main__':
 
     # Send The Given Tweet To The Specified Channel
     async def output(tweet, media):
-        channel = discordClient.get_channel(discordChannel) # Get The Channel To Send To
-        server = discord.utils.get(discordClient.guilds, name=discordServer) # Get The Server ID
-        role = discord.utils.get(server.roles, name='Weewas') # Get The Role To Mention
+        server = discord.utils.get(discordClient.guilds, name=discordServer)  # Get The Current Server ID
+        channel = discordClient.get_channel(discordChannel)  # Get The Channel To Send Embeds to
+        role = discord.utils.get(server.roles, name=discordRole) # Get The Role To Mention
+        print(role)
+        print(discordRole)
 
         # Get User Info
         user = twitterClient.get_user(id=tweet.author_id, user_fields=["name", "profile_image_url"])
@@ -100,32 +112,29 @@ if __name__ == '__main__':
             time.minute)
         embedVar.set_footer(text="Twitter • " + formatTime)
 
-        # Ping Weewas And Send The Embed To The Channel
+        # Ping Role And Send The Embed To The Channel
         await channel.send(content=role.mention + " " + tweetURL, embed=embedVar)
 
 
     # When The Discord Bot Starts, Create A Twitter Stream (Which Handles The Posting)
     @discordClient.event
     async def on_ready():
-        server = discord.utils.get(discordClient.guilds, name=discordServer)   # Get The Current Server ID
-        print(discordClient.user, ' Is Ready! ', server.id)      # Print To Console The Text Channel The Bot Will Use
+        server = discord.utils.get(discordClient.guilds, name=discordServer)  # Get The Current Server ID
+        print(discordClient.user, ' Is Ready! Server is: ', server.id)      # Print To Console The Text Channel The Bot Will Use
 
         await awake()    # Let The Server Know The Bot Is Up
 
-        stream = TweetStream(bearer_token=twitterBearer)    # Create The Twitter Stream
-
-        # Follow The Desired Twitter Users
-        for user in users:
-            rule = "from:" + user       # Specific Twitter API Syntax (See Twitter Documentation)
-            await stream.add_rules(tweepy.StreamRule(rule))
-        print(await stream.get_rules())
-        # This Is The Actual Run Of The Stream
+        # This Is The Actual Run Of The Twitter Stream
         stream.filter(expansions=["attachments.media_keys", "referenced_tweets.id"], # Allows For Images/Videos, Retweets, Replies
                       media_fields=["media_key", "type", "preview_image_url", "url"], # URL To The Media In The Tweet
                       tweet_fields=["author_id", "created_at"] # Adds The Author ID And Date Created To Tweet Objects
                       )
 
-
+    # Report When The Bot Goes Down
+    @discordClient.event
+    async def on_disconnect():
+        print(discordClient.user, " Has Disconnected!")
+        stream.disconnect()
 
 
     discordClient.run(discordToken) # Start The Discord Bot
