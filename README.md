@@ -35,7 +35,7 @@ Now before you judge my code, consider the following:
 Summary: Combining two APIs is really hard.
 
 Future Improvements:
-* Proper error checking
+* Proper error checking for twitter and discord
 * Handle videos
-* Handle retweets and replies
-* Change timezone
+* Better context for replies
+* Variable timezone
