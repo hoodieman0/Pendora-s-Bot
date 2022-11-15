@@ -89,8 +89,6 @@ if __name__ == '__main__':
         server = discord.utils.get(discordClient.guilds, name=discordServer)  # Get The Current Server ID
         channel = discordClient.get_channel(discordChannel)  # Get The Channel To Send Embeds to
         role = discord.utils.get(server.roles, name=discordRole) # Get The Role To Mention
-        print(role)
-        print(discordRole)
 
         # Get User Info
         user = twitterClient.get_user(id=tweet.author_id, user_fields=["name", "profile_image_url"])
@@ -124,10 +122,23 @@ if __name__ == '__main__':
 
         await awake()    # Let The Server Know The Bot Is Up
 
-        # This Is The Actual Run Of The Twitter Stream
-        stream.filter(expansions=["attachments.media_keys", "referenced_tweets.id"], # Allows For Images/Videos, Retweets, Replies
+        if not stream.session:
+            # This Is The Actual Run Of The Twitter Stream
+            stream.filter(expansions=["attachments.media_keys", "referenced_tweets.id"], # Allows For Images/Videos, Retweets, Replies
                       media_fields=["media_key", "type", "preview_image_url", "url"], # URL To The Media In The Tweet
                       tweet_fields=["author_id", "created_at"] # Adds The Author ID And Date Created To Tweet Objects
+                      )
+
+    # Report When the Bot Reconnects
+    @discordClient.event
+    async def on_resumed():
+        print("Reconnecting")
+        if not stream.session:
+            # This Is The Actual Run Of The Twitter Stream
+            stream.filter(expansions=["attachments.media_keys", "referenced_tweets.id"],
+                      # Allows For Images/Videos, Retweets, Replies
+                      media_fields=["media_key", "type", "preview_image_url", "url"],  # URL To The Media In The Tweet
+                      tweet_fields=["author_id", "created_at"]  # Adds The Author ID And Date Created To Tweet Objects
                       )
 
     # Report When The Bot Goes Down
