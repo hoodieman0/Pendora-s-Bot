@@ -51,7 +51,7 @@ class TweetStream(asynchronous.AsyncStreamingClient):
 
         print(tweet.author_id, "---", tweet.text)
         await output(tweet, media)
-
+        
 
 if __name__ == '__main__':
     load_dotenv()   # Get .env File For Hidden Variables
@@ -122,30 +122,11 @@ if __name__ == '__main__':
 
         await awake()    # Let The Server Know The Bot Is Up
 
-        if not stream.session:
-            # This Is The Actual Run Of The Twitter Stream
-            stream.filter(expansions=["attachments.media_keys", "referenced_tweets.id"], # Allows For Images/Videos, Retweets, Replies
+        # This Is The Actual Run Of The Twitter Stream
+        stream.filter(expansions=["attachments.media_keys", "referenced_tweets.id"], # Allows For Images/Videos, Retweets, Replies
                       media_fields=["media_key", "type", "preview_image_url", "url"], # URL To The Media In The Tweet
                       tweet_fields=["author_id", "created_at"] # Adds The Author ID And Date Created To Tweet Objects
                       )
-
-    # Report When the Bot Reconnects
-    @discordClient.event
-    async def on_resumed():
-        print("Reconnecting")
-        if not stream.session:
-            # This Is The Actual Run Of The Twitter Stream
-            stream.filter(expansions=["attachments.media_keys", "referenced_tweets.id"],
-                      # Allows For Images/Videos, Retweets, Replies
-                      media_fields=["media_key", "type", "preview_image_url", "url"],  # URL To The Media In The Tweet
-                      tweet_fields=["author_id", "created_at"]  # Adds The Author ID And Date Created To Tweet Objects
-                      )
-
-    # Report When The Bot Goes Down
-    @discordClient.event
-    async def on_disconnect():
-        print(discordClient.user, " Has Disconnected!")
-        stream.disconnect()
 
 
     discordClient.run(discordToken) # Start The Discord Bot
